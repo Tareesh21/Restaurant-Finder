@@ -1,0 +1,174 @@
+/* page layout */
+.page {
+    min-height: 100vh;
+    padding: 2rem;
+    background: #f4f5f7;
+    font-family: sans-serif;
+    color: #333;
+  }
+  
+  /* header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .header h1 {
+    margin: 0;
+    font-size: 2rem;
+  }
+  
+  /* buttons */
+  .btn {
+    background: #2d6a4f;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .btn.cancel {
+    background: #d00000;
+  }
+  .btn.search-btn {
+    white-space: nowrap;
+  }
+  
+  /* ─── UPDATED “search-form” ───────────────────────────────────────── */
+  
+  /* lay out inputs/selects in a row, each min-150px, wrapping as needed,
+     with the last 120px column for the Search button */
+  .search-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) 120px;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .search-form input,
+  .search-form select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .search-form .search-btn {
+    /* make the button fill that final 120px column */
+    width: 100%;
+    justify-self: stretch;
+  }
+  
+  /* ─── REST OF YOUR CSS (unchanged) ───────────────────────────────────────── */
+  
+  /* section titles */
+  .section-title {
+    margin: 2rem 0 1rem;
+    font-size: 1.5rem;
+  }
+  
+  /* cards grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  
+  /* restaurant card */
+  .card {
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+  }
+  .card-img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+  }
+  .card-body {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+  }
+  .card-sub {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  .card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
+  }
+  
+  /* inline review form */
+  .review-form {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 0.5rem;
+  }
+  .review-form select,
+  .review-form input {
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .review-form .submit {
+    background: #2d6a4f;
+  }
+  .review-form .cancel {
+    background: #d00000;
+  }
+  
+  /* bookings list */
+  .booking-list {
+    list-style: none;
+    padding: 0;
+  }
+  .booking-list li {
+    background: white;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  /* reviews modal */
+  .modal-backdrop {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 6px;
+    max-width: 400px;
+    width: 90%;
+  }
+  .reviews-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+  .reviews-list li {
+    margin-bottom: 0.5rem;
+  }
+  

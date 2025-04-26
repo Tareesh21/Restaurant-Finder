@@ -1,0 +1,112 @@
+/* ManagerDashboard.css */
+
+.page {
+    min-height: 100vh;
+    padding: 2rem;
+    background: #f4f5f7;
+    font-family: sans-serif;
+    color: #333;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  
+  .header h1 {
+    margin: 0;
+    font-size: 2rem;
+  }
+  
+  .btn {
+    background: #2d6a4f;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .btn.danger {
+    background: #d00000;
+  }
+  
+  .form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+  
+  .form input,
+  .form select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+  
+  .form button {
+    font-size: 0.9rem;
+    grid-column: span 2;
+  }
+  
+  /* ───────────────────────────────────────────────────────────────── */
+  /* Wrapper to lay out your restaurant “cards” side-by-side, wrapping */
+  /* ───────────────────────────────────────────────────────────────── */
+  .restaurants-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  /* Each card will try to be at least 300px wide, and fill the row */
+  .restaurant {
+    flex: 1 1 300px;
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .restaurant h3 {
+    margin: 0 0 0.5rem;
+  }
+  
+  .photos {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .photos img {
+    width: 100px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .restaurant p {
+    margin: 0.25rem 0;
+    flex-shrink: 0;
+  }
+  
+  .actions {
+    margin-top: auto; /* push to bottom */
+  }
+  
+  .actions button {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
