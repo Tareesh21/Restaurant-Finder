@@ -88,18 +88,13 @@ const CustomerDashboard = () => {
       alert('Review submitted!');
       setShowReviewForm(null);
 
-      // fetch updated restaurant with reviews
+      // refresh that restaurant’s avgRating inline
       const { data } = await axios.get(`/customer/get-restaurant/${id}`);
-      // compute avgRating
       const reviews = data.reviews || [];
-      const avg = reviews.length
+      data.avgRating = reviews.length
         ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         : null;
-      data.avgRating = avg;
-
-      setResults(r =>
-        r.map(x => (x._id === id ? data : x))
-      );
+      setResults(r => r.map(x => (x._id === id ? data : x)));
     } catch (err) {
       console.error('Review error:', err);
       alert('Failed to submit review');
@@ -137,9 +132,9 @@ const CustomerDashboard = () => {
       </header>
 
       <section className="search-form">
-        <input name="city"     placeholder="City"            value={search.city}     onChange={handleChange} />
-        <input name="zip"      placeholder="Zip Code"        value={search.zip}      onChange={handleChange} />
-        <select name="cuisine" value={search.cuisine}     onChange={handleChange}>
+        <input name="city"     placeholder="City"     value={search.city}   onChange={handleChange} />
+        <input name="zip"      placeholder="Zip Code" value={search.zip}    onChange={handleChange} />
+        <select name="cuisine" value={search.cuisine} onChange={handleChange}>
           <option value="">All Cuisines</option>
           <option value="Italian">Italian</option>
           <option value="Indian">Indian</option>
@@ -149,8 +144,8 @@ const CustomerDashboard = () => {
           <option value="">Any Rating</option>
           {[1,2,3,4,5].map(n => <option key={n} value={n}>≥ {n} ⭐</option>)}
         </select>
-        <input name="date" type="date"  value={search.date}  onChange={handleChange} />
-        <input name="time" type="time"  value={search.time}  onChange={handleChange} />
+        <input name="date" type="date"  value={search.date} onChange={handleChange} />
+        <input name="time" type="time"  value={search.time} onChange={handleChange} />
         <input name="people" type="number" min="1" value={search.people} onChange={handleChange} />
         <button className="btn search-btn" onClick={searchRestaurants}>Search</button>
       </section>
@@ -160,8 +155,7 @@ const CustomerDashboard = () => {
         {results.length === 0 && <p className="no-items">No restaurants found.</p>}
         {results.map(rest => {
           const fullAddr = `${rest.address}, ${rest.city}, ${rest.state} ${rest.zipCode}`;
-          const mapsUrl =
-            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddr)}`;
+          const mapsUrl  = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddr)}`;
 
           return (
             <div key={rest._id} className="card">
@@ -169,7 +163,7 @@ const CustomerDashboard = () => {
               <div className="card-body">
                 <h3 className="card-title">{rest.name}</h3>
                 <p className="card-sub">
-                  {rest.city} — {rest.cuisine} | 💵 {rest.cost} | ⭐{' '}
+                  {rest.city} — {rest.cuisine} | 💵 {rest.cost} | ⭐ 
                   {rest.avgRating != null ? rest.avgRating.toFixed(1) : 'N/A'}
                 </p>
                 <div className="card-actions">
@@ -221,7 +215,8 @@ const CustomerDashboard = () => {
               : <ul className="reviews-list">
                   {selectedRest.reviews.map((r,i) => (
                     <li key={i}>
-                      ⭐ {r.rating} – {r.comment?.trim() || 'No comment'} {r.user?.name && `(by ${r.user.name})`}
+                      ⭐ {r.rating} – {r.comment?.trim() || 'No comment'}
+                      {r.user?.name && ` (by ${r.user.name})`}
                     </li>
                   ))}
                 </ul>
@@ -235,9 +230,6 @@ const CustomerDashboard = () => {
 };
 
 export default CustomerDashboard;
-
-
-
 
 
 
