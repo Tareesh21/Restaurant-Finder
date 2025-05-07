@@ -6,50 +6,55 @@ import '../styles/CustomerDashboard.css';
 const CustomerDashboard = () => {
   const navigate = useNavigate();
 
-  const [search, setSearch] = useState({
-    city: '',
-    date: '',
-    time: '',
-    people: 1,
-    zip: '',
-    cuisine: '',
-    minRating: ''
-  });
-  const [results, setResults] = useState([]);
+  const [search, setSearch]     = useState({ city:'', zip:'', cuisine:'', minRating:'', date:'', time:'', people:1 });
+  const [results, setResults]   = useState([]);
   const [bookings, setBookings] = useState([]);
-  const [selectedRest, setSelectedRest] = useState(null);
+  const [selectedRest, setSelectedRest]   = useState(null);
+  const [showTimeModal, setShowTimeModal] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(null);
-  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+  const [newReview, setNewReview] = useState({ rating:5, comment:'' });
 
-  const handleChange = e => {
-    const { name, value } = e.target;
-    setSearch(s => ({ ...s, [name]: value }));
-  };
+  const handleChange       = e => setSearch(s => ({ ...s, [e.target.name]: e.target.value }));
+  const handleReviewChange = e => setNewReview(r => ({ ...r, [e.target.name]: e.target.value }));
 
   const searchRestaurants = async () => {
     const params = {};
-    Object.entries(search).forEach(([k, v]) => {
+    Object.entries(search).forEach(([k,v]) => {
       if (v !== '' && v != null) params[k] = v;
     });
     try {
-      const res = await axios.get('/customer/search', { params });
-      setResults(res.data);
+      const { data } = await axios.get('/customer/search', { params });
+      setResults(data);
     } catch (err) {
       console.error('Search error', err);
     }
   };
 
-  const bookTable = async id => {
+  const openTimeModal = rest => {
+    setShowTimeModal({
+      id: rest._id,
+      name: rest.name,
+      times: rest.bookingTimes || [],
+      people: search.people
+    });
+  };
+
+  const bookTable = async (restaurantId, time, numPeople) => {
+    if (!search.date) {
+      alert("Please pick a date before booking.");
+        return;
+    }
     try {
-      const { date, time, people } = search;
-      const res = await axios.post('/customer/book', {
-        restaurantId: id,
-        date,
+      await axios.post('/customer/book', {
+        restaurantId,
+        date : search.date,
         time,
-        numPeople: parseInt(people)
+        numPeople: parseInt(numPeople)
       });
-      alert(res.data.message);
-      fetchMyBookings();
+      alert('Booked successfully and confirmation send to mail');
+      await fetchMyBookings();
+      await searchRestaurants();     
+      setShowTimeModal(null);
     } catch (err) {
       console.error('Booking error:', err);
       alert(`Booking error: ${err.response?.data?.message || err.message}`);
@@ -58,8 +63,8 @@ const CustomerDashboard = () => {
 
   const fetchMyBookings = async () => {
     try {
-      const res = await axios.get('/customer/my-bookings');
-      setBookings(res.data);
+      const { data } = await axios.get('/customer/my-bookings');
+      setBookings(data);
     } catch (err) {
       console.error('Fetch bookings error:', err);
     }
@@ -75,35 +80,21 @@ const CustomerDashboard = () => {
     }
   };
 
-  const handleReviewChange = e => {
-    setNewReview(n => ({ ...n, [e.target.name]: e.target.value }));
-  };
-
-  const submitReview = async id => {
+  const submitReview = async restaurantId => {
     try {
-      await axios.post(`/customer/review/${id}`, {
+      await axios.post(`/customer/review/${restaurantId}`, {
         rating: parseInt(newReview.rating),
         comment: newReview.comment
       });
-      alert('Review submitted!');
+      alert("Review Submitted")
+      // refresh single restaurant to pick up new avgRating
+      const { data } = await axios.get(`/customer/get-restaurant/${restaurantId}`);
+      setResults(r => r.map(x => x._id === restaurantId ? data : x));
       setShowReviewForm(null);
-
-      // refresh that restaurant’s avgRating inline
-      const { data } = await axios.get(`/customer/get-restaurant/${id}`);
-      const reviews = data.reviews || [];
-      data.avgRating = reviews.length
-        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-        : null;
-      setResults(r => r.map(x => (x._id === id ? data : x)));
     } catch (err) {
       console.error('Review error:', err);
       alert('Failed to submit review');
     }
-  };
-
-  const logout = () => {
-    localStorage.clear();
-    navigate('/login', { replace: true });
   };
 
   const viewReviews = async rest => {
@@ -115,38 +106,52 @@ const CustomerDashboard = () => {
     }
   };
 
-  const closeModal = () => setSelectedRest(null);
+  const closeModal = () => {
+    setSelectedRest(null);
+    setShowTimeModal(null);
+  };
+
+  const logout = () => {
+    localStorage.clear();
+    navigate('/login', { replace: true });
+  };
 
   useEffect(() => {
-    window.history.replaceState(null, '', window.location.href);
-    window.addEventListener('popstate', () => window.history.go(1));
     fetchMyBookings();
-    return () => window.removeEventListener('popstate', () => {});
+    // reset “timesBookedToday” at midnight
+    const now   = new Date();
+    const next  = new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
+    const delay = next - now;
+    const tid   = setTimeout(() => {
+      setResults(r => r.map(x => ({ ...x, timesBookedToday: 0 })));
+    }, delay);
+    return () => clearTimeout(tid);
   }, []);
 
   return (
     <div className="page">
       <header className="header">
         <h1>Customer Dashboard</h1>
-        <button className="btn" onClick={logout}>Logout</button>
+        <button className="btn logout-btn" onClick={logout}>Logout</button>
       </header>
 
       <section className="search-form">
-        <input name="city"     placeholder="City"     value={search.city}   onChange={handleChange} />
-        <input name="zip"      placeholder="Zip Code" value={search.zip}    onChange={handleChange} />
-        <select name="cuisine" value={search.cuisine} onChange={handleChange}>
+        <input     name="city"      placeholder="City"       value={search.city}      onChange={handleChange} />
+        <input     name="zip"       placeholder="Zip Code"   value={search.zip}       onChange={handleChange} />
+        <select    name="cuisine"   value={search.cuisine}   onChange={handleChange}>
           <option value="">All Cuisines</option>
           <option value="Italian">Italian</option>
           <option value="Indian">Indian</option>
           <option value="Mexican">Mexican</option>
         </select>
-        <select name="minRating" value={search.minRating} onChange={handleChange}>
+        <select    name="minRating" value={search.minRating} onChange={handleChange}>
           <option value="">Any Rating</option>
           {[1,2,3,4,5].map(n => <option key={n} value={n}>≥ {n} ⭐</option>)}
         </select>
-        <input name="date" type="date"  value={search.date} onChange={handleChange} />
-        <input name="time" type="time"  value={search.time} onChange={handleChange} />
-        <input name="people" type="number" min="1" value={search.people} onChange={handleChange} />
+        <input     name="date" type="date"  value={search.date}  onChange={handleChange} />
+        <input     name="time" type="time"  value={search.time}  onChange={handleChange} />
+        <input     name="people" type="number" min="1" max="10"
+                   value={search.people} onChange={handleChange} />
         <button className="btn search-btn" onClick={searchRestaurants}>Search</button>
       </section>
 
@@ -154,39 +159,40 @@ const CustomerDashboard = () => {
       <div className="cards-grid">
         {results.length === 0 && <p className="no-items">No restaurants found.</p>}
         {results.map(rest => {
-          const fullAddr = `${rest.address}, ${rest.city}, ${rest.state} ${rest.zipCode}`;
-          const mapsUrl  = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddr)}`;
-
+          const mapsUrl = 
+            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+              `${rest.address}, ${rest.city}, ${rest.state} ${rest.zipCode}`
+            )}`;
           return (
             <div key={rest._id} className="card">
               <img className="card-img" src={rest.photos[0]} alt={rest.name} />
               <div className="card-body">
                 <h3 className="card-title">{rest.name}</h3>
                 <p className="card-sub">
-                  {rest.city} — {rest.cuisine} | 💵 {rest.cost} | ⭐ 
-                  {rest.avgRating != null ? rest.avgRating.toFixed(1) : 'N/A'}
+                  {rest.city} — {rest.cuisine} | 💵 {rest.cost} | ⭐{' '}
+                  {rest.avgRating!=null ? rest.avgRating.toFixed(1) : 'N/A'}{' '}
+                  | Number of times booked - {rest.timesBookedToday} today
                 </p>
                 <div className="card-actions">
-                  <button className="btn" onClick={() => bookTable(rest._id)}>Book</button>
-                  <button className="btn" onClick={() => setShowReviewForm(rest._id)}>Leave Review</button>
+                  <button className="btn" onClick={() => openTimeModal(rest)}>Book</button>
+                  <button className="btn" onClick={() => {
+                    setNewReview({ rating:5, comment:'' });
+                    setShowReviewForm(rest._id);
+                  }}>Leave Review</button>
                   <button className="btn" onClick={() => viewReviews(rest)}>View Reviews</button>
-                  <button className="btn" onClick={() => window.open(mapsUrl, '_blank')}>View on Map</button>
+                  <button className="btn" onClick={() => window.open(mapsUrl,'_blank')}>View on Map</button>
                 </div>
 
+                {/* inline review form */}
                 {showReviewForm === rest._id && (
                   <div className="review-form">
                     <select name="rating" value={newReview.rating} onChange={handleReviewChange}>
-                      {[1,2,3,4,5].map(n => <option key={n} value={n}>⭐ {n}</option>)}
+                      {[1,2,3,4,5].map(n=> <option key={n} value={n}>⭐ {n}</option>)}
                     </select>
-                    <input
-                      type="text"
-                      name="comment"
-                      placeholder="Write a review..."
-                      value={newReview.comment}
-                      onChange={handleReviewChange}
-                    />
-                    <button className="btn submit" onClick={() => submitReview(rest._id)}>Submit</button>
-                    <button className="btn cancel" onClick={() => setShowReviewForm(null)}>Cancel</button>
+                    <input name="comment" placeholder="Write a review…" value={newReview.comment}
+                           onChange={handleReviewChange} />
+                    <button className="btn submit" onClick={()=>submitReview(rest._id)}>Submit</button>
+                    <button className="btn cancel" onClick={()=>setShowReviewForm(null)}>Cancel</button>
                   </div>
                 )}
               </div>
@@ -200,28 +206,64 @@ const CustomerDashboard = () => {
         {bookings.length === 0 && <li>No bookings yet.</li>}
         {bookings.map(b => (
           <li key={b._id}>
-            <span>📅 {b.date} @ {b.time} → {b.restaurant?.name || 'Unknown'}</span>
-            <button className="btn cancel" onClick={() => cancelBooking(b._id)}>Cancel</button>
+            <span>📅 {b.date} @ {b.time} → {b.restaurant?.name||'Unknown'}</span>
+            <button className="btn cancel" onClick={()=>cancelBooking(b._id)}>Cancel</button>
           </li>
         ))}
       </ul>
 
+      {/* Reviews modal */}
       {selectedRest && (
-        <div className="modal-backdrop">
-          <div className="modal">
+        <div className="modal-backdrop" onClick={closeModal}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
             <h2>Reviews for {selectedRest.name}</h2>
             {(!selectedRest.reviews || !selectedRest.reviews.length)
               ? <p>No reviews yet.</p>
               : <ul className="reviews-list">
-                  {selectedRest.reviews.map((r,i) => (
-                    <li key={i}>
-                      ⭐ {r.rating} – {r.comment?.trim() || 'No comment'}
-                      {r.user?.name && ` (by ${r.user.name})`}
-                    </li>
+                  {selectedRest.reviews.map((r,i)=>(
+                    <li key={i}>⭐ {r.rating} – {r.comment||'No comment'}{r.user?.name&&` (by ${r.user.name})`}</li>
                   ))}
                 </ul>
             }
             <button className="btn" onClick={closeModal}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Time-slot + seating modal */}
+      {showTimeModal && (
+        <div className="modal-backdrop" onClick={closeModal}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <h2>Select a time slot for {showTimeModal.name}</h2>
+
+            <div className="seating-control">
+              <span className="people-icon">👤</span>
+              <input
+                type="number"
+                className="people-input"
+                min="1" max="10"
+                value={showTimeModal.people}
+                onChange={e => setShowTimeModal(m=>({
+                  ...m,
+                  people: Math.min(10, Math.max(1, parseInt(e.target.value)||1))
+                }))}
+              />
+              <span>people</span>
+            </div>
+
+            <div className="times-list">
+              {showTimeModal.times.length === 0
+                ? <p>No slots available.</p>
+                : showTimeModal.times.map((t,i)=>(
+                    <button key={i}
+                      className="btn time-slot"
+                      onClick={()=>bookTable(showTimeModal.id, t, showTimeModal.people)}
+                    >{t}</button>
+                  ))
+              }
+            </div>
+
+            <button className="btn cancel" onClick={closeModal}>Cancel</button>
           </div>
         </div>
       )}
@@ -230,6 +272,597 @@ const CustomerDashboard = () => {
 };
 
 export default CustomerDashboard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { useState, useEffect } from 'react';
+// import axios from '../api/axiosInstance';
+// import { useNavigate } from 'react-router-dom';
+// import '../styles/CustomerDashboard.css';
+
+// const CustomerDashboard = () => {
+//   const navigate = useNavigate();
+
+//   const [search, setSearch] = useState({
+//     city: '',
+//     date: '',
+//     time: '',
+//     people: 1,
+//     zip: '',
+//     cuisine: '',
+//     minRating: ''
+//   });
+//   const [results, setResults] = useState([]);
+//   const [bookings, setBookings] = useState([]);
+//   const [selectedRest, setSelectedRest] = useState(null);
+//   const [showReviewForm, setShowReviewForm] = useState(null);
+//   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+
+//   const handleChange = e => {
+//     const { name, value } = e.target;
+//     setSearch(s => ({ ...s, [name]: value }));
+//   };
+
+//   const searchRestaurants = async () => {
+//     const params = {};
+//     Object.entries(search).forEach(([k, v]) => {
+//       if (v !== '' && v != null) params[k] = v;
+//     });
+//     try {
+//       const res = await axios.get('/customer/search', { params });
+//       setResults(res.data);
+//     } catch (err) {
+//       console.error('Search error', err);
+//     }
+//   };
+
+//   const bookTable = async id => {
+//     try {
+//       const { date, time, people } = search;
+//       const res = await axios.post('/customer/book', {
+//         restaurantId: id,
+//         date,
+//         time,
+//         numPeople: parseInt(people)
+//       });
+//       alert(res.data.message);
+//       fetchMyBookings();
+//     } catch (err) {
+//       console.error('Booking error:', err);
+//       alert(`Booking error: ${err.response?.data?.message || err.message}`);
+//     }
+//   };
+
+//   const fetchMyBookings = async () => {
+//     try {
+//       const res = await axios.get('/customer/my-bookings');
+//       setBookings(res.data);
+//     } catch (err) {
+//       console.error('Fetch bookings error:', err);
+//     }
+//   };
+
+//   const cancelBooking = async id => {
+//     try {
+//       await axios.delete(`/customer/cancel/${id}`);
+//       fetchMyBookings();
+//     } catch (err) {
+//       console.error('Cancel error:', err);
+//       alert(`Error cancelling booking: ${err.response?.data?.message || err.message}`);
+//     }
+//   };
+
+//   const handleReviewChange = e => {
+//     setNewReview(n => ({ ...n, [e.target.name]: e.target.value }));
+//   };
+
+//   const submitReview = async id => {
+//     try {
+//       await axios.post(`/customer/review/${id}`, {
+//         rating: parseInt(newReview.rating),
+//         comment: newReview.comment
+//       });
+//       alert('Review submitted!');
+//       setShowReviewForm(null);
+
+//       // refresh that restaurant’s avgRating inline
+//       const { data } = await axios.get(`/customer/get-restaurant/${id}`);
+//       const reviews = data.reviews || [];
+//       data.avgRating = reviews.length
+//         ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+//         : null;
+//       setResults(r => r.map(x => (x._id === id ? data : x)));
+//     } catch (err) {
+//       console.error('Review error:', err);
+//       alert('Failed to submit review');
+//     }
+//   };
+
+//   const logout = () => {
+//     localStorage.clear();
+//     navigate('/login', { replace: true });
+//   };
+
+//   const viewReviews = async rest => {
+//     try {
+//       const { data } = await axios.get(`/customer/get-restaurant/${rest._id}`);
+//       console.log("Reviews loading successfully")
+//       setSelectedRest(data);
+//     } catch (err) {
+//       console.error('Failed to load reviews:', err);
+//     }
+//   };
+
+//   const closeModal = () => setSelectedRest(null);
+
+//   useEffect(() => {
+//     window.history.replaceState(null, '', window.location.href);
+//     window.addEventListener('popstate', () => window.history.go(1));
+//     fetchMyBookings();
+//     return () => window.removeEventListener('popstate', () => {});
+//   }, []);
+
+//   return (
+//     <div className="page">
+//       <header className="header">
+//         <h1>Customer Dashboard</h1>
+//         <button className="btn" onClick={logout}>Logout</button>
+//       </header>
+
+//       <section className="search-form">
+//         <input name="city"     placeholder="City"     value={search.city}   onChange={handleChange} />
+//         <input name="zip"      placeholder="Zip Code" value={search.zip}    onChange={handleChange} />
+//         <select name="cuisine" value={search.cuisine} onChange={handleChange}>
+//           <option value="">All Cuisines</option>
+//           <option value="Italian">Italian</option>
+//           <option value="Indian">Indian</option>
+//           <option value="Mexican">Mexican</option>
+//         </select>
+//         <select name="minRating" value={search.minRating} onChange={handleChange}>
+//           <option value="">Any Rating</option>
+//           {[1,2,3,4,5].map(n => <option key={n} value={n}>≥ {n} ⭐</option>)}
+//         </select>
+//         <input name="date" type="date"  value={search.date} onChange={handleChange} />
+//         <input name="time" type="time"  value={search.time} onChange={handleChange} />
+//         <input name="people" type="number" min="1" value={search.people} onChange={handleChange} />
+//         <button className="btn search-btn" onClick={searchRestaurants}>Search</button>
+//       </section>
+
+//       <h2 className="section-title">Results</h2>
+//       <div className="cards-grid">
+//         {results.length === 0 && <p className="no-items">No restaurants found.</p>}
+//         {results.map(rest => {
+//           const fullAddr = `${rest.address}, ${rest.city}, ${rest.state} ${rest.zipCode}`;
+//           const mapsUrl  = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddr)}`;
+
+//           return (
+//             <div key={rest._id} className="card">
+//               <img className="card-img" src={rest.photos[0]} alt={rest.name} />
+//               <div className="card-body">
+//                 <h3 className="card-title">{rest.name}</h3>
+//                 <p className="card-sub">
+//                   {rest.city} — {rest.cuisine} | 💵 {rest.cost} | ⭐ 
+//                   {rest.avgRating != null ? rest.avgRating.toFixed(1) : 'N/A'}
+//                 </p>
+//                 <div className="card-actions">
+//                   <button className="btn" onClick={() => bookTable(rest._id)}>Book</button>
+//                   <button className="btn" onClick={() => setShowReviewForm(rest._id)}>Leave Review</button>
+//                   <button className="btn" onClick={() => viewReviews(rest)}>View Reviews</button>
+//                   <button className="btn" onClick={() => window.open(mapsUrl, '_blank')}>View on Map</button>
+//                 </div>
+
+//                 {showReviewForm === rest._id && (
+//                   <div className="review-form">
+//                     <select name="rating" value={newReview.rating} onChange={handleReviewChange}>
+//                       {[1,2,3,4,5].map(n => <option key={n} value={n}>⭐ {n}</option>)}
+//                     </select>
+//                     <input
+//                       type="text"
+//                       name="comment"
+//                       placeholder="Write a review..."
+//                       value={newReview.comment}
+//                       onChange={handleReviewChange}
+//                     />
+//                     <button className="btn submit" onClick={() => submitReview(rest._id)}>Submit</button>
+//                     <button className="btn cancel" onClick={() => setShowReviewForm(null)}>Cancel</button>
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           );
+//         })}
+//       </div>
+
+//       <h2 className="section-title">My Bookings</h2>
+//       <ul className="booking-list">
+//         {bookings.length === 0 && <li>No bookings yet.</li>}
+//         {bookings.map(b => (
+//           <li key={b._id}>
+//             <span>📅 {b.date} @ {b.time} → {b.restaurant?.name || 'Unknown'}</span>
+//             <button className="btn cancel" onClick={() => cancelBooking(b._id)}>Cancel</button>
+//           </li>
+//         ))}
+//       </ul>
+
+//       {selectedRest && (
+//         <div className="modal-backdrop">
+//           <div className="modal">
+//             <h2>Reviews for {selectedRest.name}</h2>
+//             {(!selectedRest.reviews || !selectedRest.reviews.length)
+//               ? <p>No reviews yet.</p>
+//               : <ul className="reviews-list">
+//                   {selectedRest.reviews.map((r,i) => (
+//                     <li key={i}>
+//                       ⭐ {r.rating} – {r.comment?.trim() || 'No comment'}
+//                       {r.user?.name && ` (by ${r.user.name})`}
+//                     </li>
+//                   ))}
+//                 </ul>
+//             }
+//             <button className="btn" onClick={closeModal}>Close</button>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default CustomerDashboard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { useState, useEffect } from 'react';
+// import axios from '../api/axiosInstance';
+// import { useNavigate } from 'react-router-dom';
+// import '../styles/CustomerDashboard.css';
+
+// const CustomerDashboard = () => {
+//   const navigate = useNavigate();
+
+//   const [search, setSearch] = useState({
+//     city: '',
+//     date: '',
+//     time: '',
+//     people: 1,
+//     zip: '',
+//     cuisine: '',
+//     minRating: ''
+//   });
+//   const [results, setResults] = useState([]);
+//   const [bookings, setBookings] = useState([]);
+//   const [selectedRest, setSelectedRest] = useState(null);
+//   const [showReviewForm, setShowReviewForm] = useState(null);
+//   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+
+//   const handleChange = e => {
+//     const { name, value } = e.target;
+//     setSearch(s => ({ ...s, [name]: value }));
+//   };
+
+//   const searchRestaurants = async () => {
+//     const params = {};
+//     Object.entries(search).forEach(([k, v]) => {
+//       if (v !== '' && v != null) params[k] = v;
+//     });
+//     try {
+//       const res = await axios.get('/customer/search', { params });
+//       setResults(res.data);
+//     } catch (err) {
+//       console.error('Search error', err);
+//     }
+//   };
+
+//   // now takes a slot string
+//   const bookTable = async (restaurantId, slot) => {
+//     try {
+//       const { date, people } = search;
+//       const res = await axios.post('/customer/book', {
+//         restaurantId,
+//         date,
+//         time: slot,
+//         numPeople: parseInt(people, 10)
+//       });
+//       alert(res.data.message);
+//       fetchMyBookings();
+//     } catch (err) {
+//       console.error('Booking error:', err);
+//       alert(`Booking error: ${err.response?.data?.message || err.message}`);
+//     }
+//   };
+
+//   const fetchMyBookings = async () => {
+//     try {
+//       const res = await axios.get('/customer/my-bookings');
+//       setBookings(res.data);
+//     } catch (err) {
+//       console.error('Fetch bookings error:', err);
+//     }
+//   };
+
+//   const cancelBooking = async id => {
+//     try {
+//       await axios.delete(`/customer/cancel/${id}`);
+//       fetchMyBookings();
+//     } catch (err) {
+//       console.error('Cancel error:', err);
+//       alert(`Error cancelling booking: ${err.response?.data?.message || err.message}`);
+//     }
+//   };
+
+//   const handleReviewChange = e => {
+//     setNewReview(n => ({ ...n, [e.target.name]: e.target.value }));
+//   };
+
+//   const submitReview = async id => {
+//     try {
+//       await axios.post(`/customer/review/${id}`, {
+//         rating: parseInt(newReview.rating, 10),
+//         comment: newReview.comment
+//       });
+//       alert('Review submitted!');
+//       setShowReviewForm(null);
+
+//       // fetch updated restaurant to refresh avgRating
+//       const { data } = await axios.get(`/customer/get-restaurant/${id}`);
+//       const reviews = data.reviews || [];
+//       data.avgRating = reviews.length
+//         ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+//         : null;
+//       setResults(r => r.map(x => (x._id === id ? data : x)));
+//     } catch (err) {
+//       console.error('Review error:', err);
+//       alert('Failed to submit review');
+//     }
+//   };
+
+//   const logout = () => {
+//     localStorage.clear();
+//     navigate('/login', { replace: true });
+//   };
+
+//   const viewReviews = async rest => {
+//     try {
+//       const { data } = await axios.get(`/customer/get-restaurant/${rest._id}`);
+//       setSelectedRest(data);
+//     } catch (err) {
+//       console.error('Failed to load reviews:', err);
+//     }
+//   };
+
+//   const closeModal = () => setSelectedRest(null);
+
+//   useEffect(() => {
+//     window.history.replaceState(null, '', window.location.href);
+//     window.addEventListener('popstate', () => window.history.go(1));
+//     fetchMyBookings();
+//     return () => window.removeEventListener('popstate', () => {});
+//   }, []);
+
+//   return (
+//     <div className="page">
+//       <header className="header">
+//         <h1>Customer Dashboard</h1>
+//         <button className="btn" onClick={logout}>Logout</button>
+//       </header>
+
+//       {/* ───────── SEARCH FORM ───────── */}
+//       <section className="search-form">
+//         <input name="city"     placeholder="City"     value={search.city}   onChange={handleChange} />
+//         <input name="zip"      placeholder="Zip Code" value={search.zip}    onChange={handleChange} />
+//         <select name="cuisine" value={search.cuisine} onChange={handleChange}>
+//           <option value="">All Cuisines</option>
+//           <option value="Italian">Italian</option>
+//           <option value="Indian">Indian</option>
+//           <option value="Mexican">Mexican</option>
+//         </select>
+//         <select name="minRating" value={search.minRating} onChange={handleChange}>
+//           <option value="">Any Rating</option>
+//           {[1,2,3,4,5].map(n => <option key={n} value={n}>≥ {n} ⭐</option>)}
+//         </select>
+//         <input name="date" type="date"  value={search.date} onChange={handleChange} />
+//         <input name="time" type="time"  value={search.time} onChange={handleChange} />
+//         <input name="people" type="number" min="1" value={search.people} onChange={handleChange} />
+//         <button className="btn search-btn" onClick={searchRestaurants}>Search</button>
+//       </section>
+
+//       {/* ───────── RESULTS ───────── */}
+//       <h2 className="section-title">Results</h2>
+//       <div className="cards-grid">
+//         {results.length === 0 && <p className="no-items">No restaurants found.</p>}
+//         {results.map(rest => {
+//           const fullAddr = `${rest.address}, ${rest.city}, ${rest.state} ${rest.zipCode}`;
+//           const mapsUrl  = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddr)}`;
+
+//           return (
+//             <div key={rest._id} className="card">
+//               <img className="card-img" src={rest.photos[0]} alt={rest.name} />
+//               <div className="card-body">
+//                 <h3 className="card-title">{rest.name}</h3>
+//                 <p className="card-sub">
+//                   {rest.city} — {rest.cuisine} | 💵 {rest.cost} | ⭐{' '}
+//                   {rest.avgRating != null ? rest.avgRating.toFixed(1) : 'N/A'}
+//                 </p>
+
+//                 {/* ← NEW: how many times booked today */}
+//                 <p className="card-booked">
+//                   📈 Booked {rest.timesBookedToday} time
+//                   {rest.timesBookedToday !== 1 && 's'} today
+//                 </p>
+
+//                 <div className="card-actions">
+//                   {/* ← NEW: one button per available slot */}
+//                   {rest.bookingTimes.map(slot => (
+//                     <button
+//                       key={slot}
+//                       className="btn"
+//                       onClick={() => bookTable(rest._id, slot)}
+//                     >
+//                       {slot}
+//                     </button>
+//                   ))}
+
+//                   <button className="btn" onClick={() => setShowReviewForm(rest._id)}>
+//                     Leave Review
+//                   </button>
+//                   <button className="btn" onClick={() => viewReviews(rest)}>
+//                     View Reviews
+//                   </button>
+//                   <button className="btn" onClick={() => window.open(mapsUrl, '_blank')}>
+//                     View on Map
+//                   </button>
+//                 </div>
+
+//                 {showReviewForm === rest._id && (
+//                   <div className="review-form">
+//                     <select name="rating" value={newReview.rating} onChange={handleReviewChange}>
+//                       {[1,2,3,4,5].map(n => <option key={n} value={n}>⭐ {n}</option>)}
+//                     </select>
+//                     <input
+//                       type="text"
+//                       name="comment"
+//                       placeholder="Write a review..."
+//                       value={newReview.comment}
+//                       onChange={handleReviewChange}
+//                     />
+//                     <button className="btn submit" onClick={() => submitReview(rest._id)}>
+//                       Submit
+//                     </button>
+//                     <button className="btn cancel" onClick={() => setShowReviewForm(null)}>
+//                       Cancel
+//                     </button>
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           );
+//         })}
+//       </div>
+
+//       {/* ───────── MY BOOKINGS ───────── */}
+//       <h2 className="section-title">My Bookings</h2>
+//       <ul className="booking-list">
+//         {bookings.length === 0 && <li>No bookings yet.</li>}
+//         {bookings.map(b => (
+//           <li key={b._id}>
+//             <span>📅 {b.date} @ {b.time} → {b.restaurant?.name || 'Unknown'}</span>
+//             <button className="btn cancel" onClick={() => cancelBooking(b._id)}>
+//               Cancel
+//             </button>
+//           </li>
+//         ))}
+//       </ul>
+
+//       {/* ───────── REVIEWS MODAL ───────── */}
+//       {selectedRest && (
+//         <div className="modal-backdrop">
+//           <div className="modal">
+//             <h2>Reviews for {selectedRest.name}</h2>
+//             {(!selectedRest.reviews || !selectedRest.reviews.length)
+//               ? <p>No reviews yet.</p>
+//               : (
+//                 <ul className="reviews-list">
+//                   {selectedRest.reviews.map((r,i) => (
+//                     <li key={i}>
+//                       ⭐ {r.rating} – {r.comment?.trim() || 'No comment'}
+//                       {r.user?.name && ` (by ${r.user.name})`}
+//                     </li>
+//                   ))}
+//                 </ul>
+//               )}
+//             <button className="btn" onClick={closeModal}>Close</button>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default CustomerDashboard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-/* page layout */
+/* ─── PAGE LAYOUT ───────────────────────────────────── */
 .page {
     min-height: 100vh;
     padding: 2rem;
@@ -7,7 +7,7 @@
     color: #333;
   }
   
-  /* header */
+  /* ─── HEADER ────────────────────────────────────────── */
   .header {
     display: flex;
     justify-content: space-between;
@@ -19,7 +19,7 @@
     font-size: 2rem;
   }
   
-  /* buttons */
+  /* ─── BUTTONS ───────────────────────────────────────── */
   .btn {
     background: #2d6a4f;
     color: white;
@@ -32,52 +32,54 @@
   .btn.cancel {
     background: #d00000;
   }
+  .btn.submit {
+    background: #2d6a4f;
+  }
   .btn.search-btn {
     white-space: nowrap;
   }
+  .btn.time-slot {
+    margin: 0.25rem 0.5rem 0.25rem 0;
+    min-width: 60px;
+  }
   
-  /* ─── UPDATED “search-form” ───────────────────────────────────────── */
-  
-  /* lay out inputs/selects in a row, each min-150px, wrapping as needed,
-     with the last 120px column for the Search button */
+  /* ─── SEARCH FORM ──────────────────────────────────── */
   .search-form {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) 120px;
     gap: 0.5rem;
     margin-bottom: 2rem;
   }
-  
   .search-form input,
   .search-form select {
     padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 4px;
   }
-  
   .search-form .search-btn {
-    /* make the button fill that final 120px column */
     width: 100%;
     justify-self: stretch;
   }
   
-  /* ─── REST OF YOUR CSS (unchanged) ───────────────────────────────────────── */
-  
-  /* section titles */
+  /* ─── SECTION TITLES ───────────────────────────────── */
   .section-title {
     margin: 2rem 0 1rem;
     font-size: 1.5rem;
   }
-  
-  /* cards grid */
-  .cards-grid {
-    display: grid;
-    /* grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); */
-    grid-template-columns: repeat(auto-fit, 280px);
-    /* justify-content: center;  */
-    gap: 1rem;
+  .no-items {
+    color: #666;
+    font-style: italic;
   }
   
-  /* restaurant card */
+  /* ─── CARDS GRID ───────────────────────────────────── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 480px);
+    gap: 1rem;
+    /* justify-content: center; */
+  }
+  
+  /* ─── RESTAURANT CARD ──────────────────────────────── */
   .card {
     background: white;
     border-radius: 6px;
@@ -85,18 +87,18 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
-    width: 280px;
+    width: 480px;
   }
   .card-img {
     width: 100%;
-    height: 140px;
+    height: 180px;
     object-fit: cover;
   }
   .card-body {
     padding: 1rem;
-    flex: 1;
     display: flex;
     flex-direction: column;
+    flex: 1;
   }
   .card-title {
     margin: 0 0 0.5rem;
@@ -114,7 +116,7 @@
     margin-top: auto;
   }
   
-  /* inline review form */
+  /* ─── INLINE REVIEW FORM ───────────────────────────── */
   .review-form {
     margin-top: 1rem;
     display: grid;
@@ -127,14 +129,27 @@
     border: 1px solid #ccc;
     border-radius: 4px;
   }
-  .review-form .submit {
-    background: #2d6a4f;
+  
+  /* ─── SEATING CONTROL (NEW) ────────────────────────── */
+  .seating-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
   }
-  .review-form .cancel {
-    background: #d00000;
+  .seating-control .people-icon {
+    font-size: 1.2rem;
+  }
+  .seating-control .people-input {
+    width: 60px;
+    padding: 0.4rem;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
   }
   
-  /* bookings list */
+  /* ─── BOOKINGS LIST ────────────────────────────────── */
   .booking-list {
     list-style: none;
     padding: 0;
@@ -149,7 +164,7 @@
     align-items: center;
   }
   
-  /* reviews modal */
+  /* ─── MODAL BACKDROP ───────────────────────────────── */
   .modal-backdrop {
     position: fixed;
     top: 0; left: 0;
@@ -158,20 +173,32 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 200;
   }
+  
+  /* ─── MODAL DIALOG ─────────────────────────────────── */
   .modal {
     background: white;
     padding: 1.5rem;
     border-radius: 6px;
-    max-width: 400px;
+    max-width: 500px;
     width: 90%;
   }
-  .reviews-list {
+  .modal h2 {
+    margin-top: 0;
+  }
+  .reviews-list,
+  .times-list {
     list-style: none;
     padding: 0;
     margin: 1rem 0;
   }
-  .reviews-list li {
+  .times-list {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .times-list .btn {
+    margin-right: 0.5rem;
     margin-bottom: 0.5rem;
   }
   

@@ -148,7 +148,7 @@ const ManagerDashboard = () => {
               <p>
                 {rest.city} — {rest.cuisine} | Cost: {rest.cost} | Tables: {rest.availableTables}
               </p>
-              <p>Times: {(rest.bookingTimes || []).join(', ')}</p>
+              {/* <p>Times: {(rest.bookingTimes || []).join(', ')}</p> */}
               <div className="actions">
                 <button className="btn" onClick={() => handleEdit(rest)}>Edit</button>
                 <button className="btn danger" onClick={() => handleDelete(rest._id)}>Delete</button>
