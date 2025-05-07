@@ -11,8 +11,11 @@ const bookingSchema = new mongoose.Schema({
     ref: 'Restaurant',
     required: true
   },
-  date: String,       // e.g. "2025-04-11"
-  time: String,       // e.g. "19:00"
+  date: {
+    type: Date,
+    required: true
+  },      
+  time: String,       
   numPeople: Number,
   status: {
     type: String,

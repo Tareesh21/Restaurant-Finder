@@ -16,7 +16,11 @@ const restaurantSchema = new mongoose.Schema({
   state: String,
   zipCode: String,
   availableTables: Number,
-  bookingTimes: [String], // ["12:00", "13:00", ...]
+  bookingTimes: {
+    type: [String],
+    default: ['18:00','19:00','20:00','21:00']
+  },
+  // bookingTimes: [String], // ["12:00", "13:00", ...]
   photos: [String],
   reviews: [{
     user: String,
