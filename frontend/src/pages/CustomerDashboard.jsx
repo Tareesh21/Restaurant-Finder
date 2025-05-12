@@ -116,6 +116,10 @@ const CustomerDashboard = () => {
     navigate('/login', { replace: true });
   };
 
+  function formatISODate(dateStr) {
+    return new Date(dateStr).toISOString().split('T')[0];
+  }
+
   useEffect(() => {
     fetchMyBookings();
     // reset “timesBookedToday” at midnight
@@ -149,8 +153,8 @@ const CustomerDashboard = () => {
           {[1,2,3,4,5].map(n => <option key={n} value={n}>≥ {n} ⭐</option>)}
         </select>
         <input     name="date" type="date"  value={search.date}  onChange={handleChange} />
-        {/* <input     name="time" type="time"  value={search.time}  onChange={handleChange} />
-        <input     name="people" type="number" min="1" max="10" value={search.people} onChange={handleChange} /> */}
+        <input     name="time" type="time"  value={search.time}  onChange={handleChange} />
+        <input     name="people" type="number" min="1" max="10" value={search.people} onChange={handleChange} />
         <button className="btn search-btn" onClick={searchRestaurants}>Search</button>
       </section>
 
@@ -170,7 +174,7 @@ const CustomerDashboard = () => {
                 <p className="card-sub">
                   {rest.city} — {rest.cuisine} | 💵 {rest.cost} | ⭐{' '}
                   {rest.avgRating!=null ? rest.avgRating.toFixed(1) : 'N/A'}{' '}
-                  | Number of times booked - {rest.timesBookedToday} today
+                  | Number of times booked - {rest.timesBookedToday} times today
                 </p>
                 <div className="card-actions">
                   <button className="btn" onClick={() => openTimeModal(rest)}>Book</button>
@@ -203,12 +207,22 @@ const CustomerDashboard = () => {
       <h2 className="section-title">My Bookings</h2>
       <ul className="booking-list">
         {bookings.length === 0 && <li>No bookings yet.</li>}
-        {bookings.map(b => (
-          <li key={b._id}>
-            <span>📅 {b.date} @ {b.time} → {b.restaurant?.name||'Unknown'}</span>
-            <button className="btn cancel" onClick={()=>cancelBooking(b._id)}>Cancel</button>
-          </li>
-        ))}
+        {bookings.map(b => {
+          const prettyDate = formatISODate(b.date);
+          return (
+            <li key={b._id}>
+              <span>
+                📅 Your table for <strong>{b.numPeople} persons </strong> at {b.restaurant?.name || 'Unknown'} is booked for <strong>{prettyDate}</strong> at <strong>{b.time} </strong>
+              </span>
+              <button
+                className="btn cancel"
+                onClick={() => cancelBooking(b._id)}
+              >
+                Cancel
+              </button>
+            </li>
+          );
+        })}
       </ul>
 
       {/* Reviews modal */}
