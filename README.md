@@ -38,7 +38,7 @@ BookTable is a cloud-native, full-stack reservation system that simplifies every
 ## Feature Overview
 
 ### Application Architecture
-- MVC separation between Express controllers, service-layer logic, and Mongoose models
+- Model-View-Controller separation between Express controllers, service-layer logic, and Mongoose models
 
 ### Authentication & Security
 - Stateless JWT tokens for role-based access (Customer, Manager, Admin)  
@@ -70,11 +70,45 @@ BookTable is a cloud-native, full-stack reservation system that simplifies every
 
 ### Deployment Diagram
 
-![Deployment Diagram](./Documentation/Deployment_Diagram.jpg)
+![System_Architecture](./Documentation/System_Architecture.jpg)
 
 ### Component Diagram
 
 ![Component Diagram](./Documentation/Component_Diagram.jpg)
+
+### Project Setup
+
+## Installation Steps
+
+1. **Clone the repository**  
+   ```bash
+   git clone https://github.com/gopinathsjsu/team-project-bytestorm.git
+
+2. **Install dependencies**  
+   ```bash
+   npm install
+
+3. **Start Backend**
+    ```bash
+    cd backend
+    npm run dev
+
+4. **Start Frontend**
+    ```bash
+    cd frontend
+    npm install 
+    npm run dev
+
+
+## Team Progress
+
+- **Project Journal:** [Journal_ByteStorm.pdf](Documentation/Journal_ByteStorm.pdf)  
+- **Daily Scrum Sheet:** [DAILYSCRUMSHEET.xlsx](Documentation/DAILYSCRUMSHEET.xlsx)  
+- **Sprint Task & Burndown Chart:** [Sprint_task_sheet_plus_burndown_chart.xlsx](Documentation/Sprint_task_sheet_plus_burndown_chart.xlsx)  
+- **UML Wireframes:** [UML_Wireframes.pdf](Documentation/UML_Wireframes.pdf)  
+
+
+
 
 
 
