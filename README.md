@@ -78,7 +78,7 @@ BookTable is a cloud-native, full-stack reservation system that simplifies every
 
 ### Deployment_Diagram
 
-![Diagram_Diagram](./Documentation/Diagram_Diagram.jpg)
+![Deployment_Diagram](./Documentation/Deployment_Diagram.jpg)
 
 ### Project Setup
 
