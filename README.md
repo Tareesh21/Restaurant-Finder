@@ -7,8 +7,8 @@ BookTable is a cloud-native, full-stack reservation system that simplifies every
 ### Customer
 - **Account Management:** Register and log in securely using JWT  
 - **Reservation Search:** Filter by date, time, party size, and location (city/state or ZIP)  
-- **Availability Overview:** View open slots within a ±30-minute window, with restaurant name, cuisine, price tier, ratings, and today’s booking count  
-- **Booking & Cancellation:** Reserve or cancel tables with instant email/SMS confirmations  
+- **Availability Overview:** View open slots within a ±30-minute window, with restaurant name, cuisine, price tier, ratings, and Number of booking count for today.
+- **Booking & Cancellation:** Reserve or cancel tables with instant email confirmations  
 - **Reviews Browser:** Read customer feedback for each restaurant  
 - **Profile Settings:** Access and update personal details
 
@@ -68,13 +68,17 @@ BookTable is a cloud-native, full-stack reservation system that simplifies every
 
 ![Use Case Diagram](./Documentation/UseCase_Diagram.jpg)
 
-### Deployment Diagram
+### System_Architecture
 
 ![System_Architecture](./Documentation/System_Architecture.jpg)
 
 ### Component Diagram
 
 ![Component Diagram](./Documentation/Component_Diagram.jpg)
+
+### Deployment_Diagram
+
+![Diagram_Diagram](./Documentation/Diagram_Diagram.jpg)
 
 ### Project Setup
 
@@ -99,13 +103,15 @@ BookTable is a cloud-native, full-stack reservation system that simplifies every
     npm install 
     npm run dev
 
+---
 
-## Team Progress
+## Our Team Progress
 
-- **Project Journal:** [Journal_ByteStorm.pdf](Documentation/Journal_ByteStorm.pdf)  
-- **Daily Scrum Sheet:** [DAILYSCRUMSHEET.xlsx](Documentation/DAILYSCRUMSHEET.xlsx)  
-- **Sprint Task & Burndown Chart:** [Sprint_task_sheet_plus_burndown_chart.xlsx](Documentation/Sprint_task_sheet_plus_burndown_chart.xlsx)  
 - **UML Wireframes:** [UML_Wireframes.pdf](Documentation/UML_Wireframes.pdf)  
+- **Project Journal:** [Journal_ByteStorm.pdf](Documentation/Journal_ByteStorm.pdf)  
+- **Sprint Task & Burndown Chart:** [Sprint_task_sheet_plus_burndown_chart.xlsx](Documentation/Sprint_task_sheet_plus_burndown_chart.xlsx)  
+- **Daily Scrum Sheet:** [DAILYSCRUMSHEET.xlsx](Documentation/DAILYSCRUMSHEET.xlsx)  
+
 
 
 
